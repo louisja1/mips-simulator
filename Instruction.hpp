@@ -6,6 +6,8 @@
 
 using namespace std;
 
+extern int Cur;
+
 class Instruction {
 public:
     Instruction() {}
@@ -47,6 +49,7 @@ public:
 };
 
 class Add : public Caculation {
+public:
     bool unsign;
     Add(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
@@ -54,6 +57,7 @@ class Add : public Caculation {
 };
 
 class Sub : public Caculation {
+public:
     bool unsign;
     Sub(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
@@ -61,6 +65,7 @@ class Sub : public Caculation {
 };
 
 class Mul : public Caculation {
+public:
     bool unsign;
     bool isempty;
     LL ans;
@@ -96,6 +101,7 @@ class Mul : public Caculation {
 };
 
 class Div : public Caculation {
+public:
     bool unsign;
     bool isempty;
     int quo, rem;
@@ -132,6 +138,84 @@ class Div : public Caculation {
     }
 };
 
+class Xor : public Instruction {
+public:
+    bool unsign;
+    Xor(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
+    virtual void execution() { res = imm1 ^ imm2; }
+};
+
+class Neg : public Instruction {
+public:
+    bool unsign;
+    Neg(const string &_rsrc1, const string &_rsrc2, bool _unsign)
+        : Caculation(_rsrc1, _rsrc2, ""), unsign(_unsign) {}
+    virtual void execution() { res = -imm1; }
+};
+
+class Rem : public Instruction {
+public:
+    bool unsign;
+    Rem(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
+    virtual void execution() {
+        if (unsign) {
+            res = UINT(imm1) % UINT(imm2);
+        } else {
+            res = imm1 % imm2;
+        }
+    }
+};
+
+class Seq : public Instruction {
+public:
+    bool unsign;
+    Seq(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { res = (imm1 == imm2); }
+};
+
+class Sge : public Instruction {
+public:
+    bool unsign;
+    Sge(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { res = (imm1 >= imm2); }
+};
+
+class Sgt : public Instruction {
+public:
+    bool unsign;
+    Sgt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { res = (imm1 > imm2); }
+};
+
+class Sle : public Instruction {
+public:
+    bool unsign;
+    Sle(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { res = (imm1 <= imm2); }
+};
+
+class Slt : public Instruction {
+public:
+    bool unsign;
+    Slt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { res = (imm1 < imm2); }
+};
+
+class Sne : public Instruction {
+public:
+    bool unsign;
+    Sne(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { res = (imm1 != imm2); }
+};
+
 //branch && jump
 class BranchJump : public Instruction {
 public:
@@ -166,6 +250,48 @@ public:
             Cur = id;
         }
     }
+};
+
+class Beq : public BranchJump {
+public:
+    Beq(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { flag = (imm1 == imm2); }
+};
+
+class Bne : public BranchJump {
+public:
+    Bne(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { flag = (imm1 != imm2); }
+};
+
+class Bge : public BranchJump {
+public:
+    Bge(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { flag = (imm1 >= imm2); }
+};
+
+class Ble : public BranchJump {
+public:
+    Ble(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { flag = (imm1 <= imm2); }
+};
+
+class Bgt : public BranchJump {
+public:
+    Bgt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { flag = (imm1 > imm2); }
+};
+
+class Blt : public BranchJump {
+public:
+    Blt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
+        : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
+    virtual void execution() { flag = (imm1 < imm2); }
 };
 
 //b j jr
@@ -240,6 +366,30 @@ public:
     }
 };
 
+class La : public Load {
+public:
+    La(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
+    virtual void writeBack() { reg[rdset] = pos; }
+};
+
+class Lb : public Load {
+public:
+    Lb(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
+    virtual void memoryAccess() { storage = pool.loadByte(id); }
+};
+
+class Lh : public Load {
+public:
+    Lh(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
+    virtual void memoryAccess() { storage = pool.loadHalfword(id); }
+};
+
+class Lw : public Load {
+public:
+    Lw(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
+    virtual void memoryAccess() { storage = pool.loadWord(id); }
+};
+
 //store
 class Store : public Instruction {
 public:
@@ -267,6 +417,24 @@ public:
         }
     }
     virtual void memoryAccess() {}
+};
+
+class Sb : public Store {
+public:
+    Sb(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
+    virtual void memoryAccess() { pool.storeByte(id, value); }
+};
+
+class Sh : public Load {
+public:
+    Sh(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
+    virtual void memoryAccess() { pool.storeHalfword(id, value); }
+};
+
+class Sw : public Load {
+public:
+    Sw(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
+    virtual void memoryAccess() { pool.storeWord(id, value); }
 };
 
 //move

@@ -95,6 +95,49 @@ public:
             text_cnt += ret;
         }
     }
+    int loadByte(int pos) {
+        int res = 0;
+        for (int i = 0; i < 1; i++) {
+            res = (res << 8) + a[pos + i];
+        }
+        return res;
+    }
+    int loadHalfword(int pos) {
+        int res = 0;
+        for (int i = 0; i < 2; i++) {
+            res = (res << 8) + a[pos + i];
+        }
+        return res;
+    }
+    int loadWord(int pos) {
+        int res = 0;
+        for (int i = 0; i < 4; i++) {
+            res = (res << 8) + a[pos + i];
+        }
+        return res;
+    }
+    void storeByte(int pos, int val) {
+        int tmp = pos + 0;
+        for (int i = 0; i < 1; i++) {
+            a[tmp - i] = val % (1 << 8);
+            val >>= 8;
+        }
+    }
+    void storeHalfword(int pos, int val) {
+        int tmp = pos + 1;
+        for (int i = 0; i < 2; i++) {
+            a[tmp - i] = val % (1 << 8);
+            val >>= 8;
+        }
+    }
+
+    void storeWord(int pos, int val) {
+        int tmp = pos + 3;
+        for (int i = 0; i < 4; i++) {
+            a[tmp - i] = val % (1 << 8);
+            val >>= 8;
+        }
+    }
 };
 
 #endif

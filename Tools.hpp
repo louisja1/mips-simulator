@@ -16,6 +16,7 @@ public:
     }
     int string2number(string st) {
         int len = st.length();
+        if (len == 0) return 0;
         if (st[0] == '-') {
             int res = 0;
             for (int i = 1; i < len; i++) {

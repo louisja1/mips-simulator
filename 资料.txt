@@ -1,0 +1,2 @@
+http://logos.cs.uic.edu/366/notes/mips%20quick%20tutorial.htm#IOSystemCalls
+http://www.cnblogs.com/thoupin/p/4018455.html

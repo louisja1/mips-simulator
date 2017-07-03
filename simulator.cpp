@@ -6,11 +6,6 @@
 #include "Parser.hpp"
 #include "Memory.hpp"
 
-typedef vector<string> vecS;
-typedef unsigned int UINT;
-typedef unsigned long long ULL;
-typedef long long LL;
-
 using namespace std;
 
 Memory pool;
@@ -18,6 +13,8 @@ map<string, int> label;
 map<string, int> dataType;
 map<string, int> textType;
 map<string, int> labelLineID;
+map<string, int> labelMemoryID;
+int Cur;
 
 void prep() {
     label.clear();
@@ -91,8 +88,8 @@ void prep() {
     textType["syscall"] = 50;
 }
 
-int main(int argc, char *argv[]) {
-    string mipsInFile, dataInFile;
+int main(/*int argc, char *argv[]*/) {
+    /*string mipsInFile, dataInFile;
     if (argc == 1) {
         cout << "Please input the mips file: ";
         cin >> mipsInFile;
@@ -106,7 +103,9 @@ int main(int argc, char *argv[]) {
         argc ++;
     } else {
         dataInFile = argv[2];
-    }
+    }*/
+    string mipsInFile = "1.s";
+    string dataInFile = "1.in";
 
     ifstream mipsIn(mipsInFile);
     ifstream dataIn(dataInFile);
@@ -114,7 +113,6 @@ int main(int argc, char *argv[]) {
 
     prep();
     Parser ps(mipsIn, dataIn, dataAns);
-    ps.work();
 
     mipsIn.close();
     dataIn.close();

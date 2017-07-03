@@ -11,10 +11,10 @@ extern Register reg;
 
 class Tools {
 public:
-    int getRegister(string _reg) {
+    static int getRegister(string _reg) {
         return reg.getid(_reg.substr(1, _reg.length() - 1));
     }
-    int string2number(string st) {
+    static int string2number(string st) {
         int len = st.length();
         if (len == 0) return 0;
         if (st[0] == '-') {
@@ -24,13 +24,14 @@ public:
             }
             return res * (-1);
         } else {
+            int res = 0;
             for (int i = 0; i < len; i++) {
                 res = res * 10 + st[i] - '0';
             }
             return res;
         }
     }
-    bool allnumber(string st) {
+    static bool allnumber(string st) {
         for (int i = 0; i < st.length(); i++) {
             if (st[i] > '9' || st[i] < '0') {
                 return false;
@@ -38,7 +39,7 @@ public:
         }
         return true;
     }
-    string getRealString(string str) {
+    static string getRealString(string str) {
         string ans = "";
         for (int i = 0; i < str.length(); i++) {
             if (str[i] == '\\' && i + 1 < str.length()) {
@@ -78,6 +79,7 @@ public:
                 ans += str[i];
             }
         }
+        return ans;
     }
 };
 

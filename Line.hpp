@@ -6,6 +6,8 @@
 #include <vector>
 #include "Tools.hpp"
 
+typedef vector<string> vecS;
+
 using namespace std;
 
 class Line {
@@ -17,7 +19,7 @@ public:
     Line() : name("") {
         argv.clear();
     }
-    virtual ~Line() {};
+    ~Line() {};
 };
 
 

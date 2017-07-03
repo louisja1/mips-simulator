@@ -4,6 +4,15 @@
 #include <cstdio>
 #include <string>
 
+typedef vector<string> vecS;
+typedef unsigned int UINT;
+typedef unsigned long long ULL;
+typedef long long LL;
+
+extern map<string, int> labelLineID;
+extern map<string, int> labelMemoryID;
+extern Memory pool;
+
 using namespace std;
 
 extern int Cur;
@@ -16,7 +25,7 @@ public:
     virtual void execution() {}
     virtual void memoryAccess() {}
     virtual void writeBack() {}
-}
+};
 
 //caculation && const operation && comparation
 class Caculation : public Instruction {
@@ -53,7 +62,7 @@ public:
     bool unsign;
     Add(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual void execution() { res = imm1 + imm2; }
+    virtual void execution() { result = imm1 + imm2; }
 };
 
 class Sub : public Caculation {
@@ -61,7 +70,7 @@ public:
     bool unsign;
     Sub(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual void execution() { res = imm1 - imm2; }
+    virtual void execution() { result = imm1 - imm2; }
 };
 
 class Mul : public Caculation {
@@ -69,7 +78,7 @@ public:
     bool unsign;
     bool isempty;
     LL ans;
-    Sub(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
+    Mul(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {
             isempty = (_rsrc3 == "");
         }
@@ -77,7 +86,7 @@ public:
         if (isempty) {
             imm2 = imm1;
             if (rsrc1 != -1) imm2 = reg[rsrc1];
-            imm1 = reg[rdset];
+            imm1 = reg[rdest];
         } else {
             if (rsrc1 != -1) imm1 = reg[rsrc1];
             if (rsrc2 != -1) imm2 = reg[rsrc2];
@@ -92,10 +101,10 @@ public:
     }
     virtual void writeBack() {
         if (isempty) {
-            reg.lo = ans % (1LL << 32);
-            reg.hi = ans >> 32;
+            reg[32] = ans % (1LL << 32);
+            reg[33] = ans >> 32;
         } else {
-            reg[rdset] = ans;
+            reg[rdest] = ans;
         }
     }
 };
@@ -105,7 +114,7 @@ public:
     bool unsign;
     bool isempty;
     int quo, rem;
-    Sub(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
+    Div(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {
             isempty = (_rsrc3 == "");
         }
@@ -113,7 +122,7 @@ public:
         if (isempty) {
             imm2 = imm1;
             if (rsrc1 != -1) imm2 = reg[rsrc1];
-            imm1 = reg[rdset];
+            imm1 = reg[rdest];
         } else {
             if (rsrc1 != -1) imm1 = reg[rsrc1];
             if (rsrc2 != -1) imm2 = reg[rsrc2];
@@ -130,90 +139,90 @@ public:
     }
     virtual void writeBack() {
         if (isempty) {
-            reg.lo = quo;
-            reg.hi = rem;
+            reg[32] = quo;
+            reg[33] = rem;
         } else {
-            reg[rdset] = quo;
+            reg[rdest] = quo;
         }
     }
 };
 
-class Xor : public Instruction {
+class Xor : public Caculation {
 public:
     bool unsign;
     Xor(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual void execution() { res = imm1 ^ imm2; }
+    virtual void execution() { result = imm1 ^ imm2; }
 };
 
-class Neg : public Instruction {
+class Neg : public Caculation {
 public:
     bool unsign;
     Neg(const string &_rsrc1, const string &_rsrc2, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, ""), unsign(_unsign) {}
-    virtual void execution() { res = -imm1; }
+    virtual void execution() { result = -imm1; }
 };
 
-class Rem : public Instruction {
+class Rem : public Caculation {
 public:
     bool unsign;
     Rem(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
     virtual void execution() {
         if (unsign) {
-            res = UINT(imm1) % UINT(imm2);
+            result = UINT(imm1) % UINT(imm2);
         } else {
-            res = imm1 % imm2;
+            result = imm1 % imm2;
         }
     }
 };
 
-class Seq : public Instruction {
+class Seq : public Caculation {
 public:
     bool unsign;
     Seq(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual void execution() { res = (imm1 == imm2); }
+    virtual void execution() { result = (imm1 == imm2); }
 };
 
-class Sge : public Instruction {
+class Sge : public Caculation {
 public:
     bool unsign;
     Sge(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual void execution() { res = (imm1 >= imm2); }
+    virtual void execution() { result = (imm1 >= imm2); }
 };
 
-class Sgt : public Instruction {
+class Sgt : public Caculation {
 public:
     bool unsign;
     Sgt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual void execution() { res = (imm1 > imm2); }
+    virtual void execution() { result = (imm1 > imm2); }
 };
 
-class Sle : public Instruction {
+class Sle : public Caculation {
 public:
     bool unsign;
     Sle(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual void execution() { res = (imm1 <= imm2); }
+    virtual void execution() { result = (imm1 <= imm2); }
 };
 
-class Slt : public Instruction {
+class Slt : public Caculation {
 public:
     bool unsign;
     Slt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual void execution() { res = (imm1 < imm2); }
+    virtual void execution() { result = (imm1 < imm2); }
 };
 
-class Sne : public Instruction {
+class Sne : public Caculation {
 public:
     bool unsign;
     Sne(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual void execution() { res = (imm1 != imm2); }
+    virtual void execution() { result = (imm1 != imm2); }
 };
 
 //branch && jump
@@ -303,7 +312,7 @@ public:
             rdest = Tools::getRegister(_rdest);
         } else {
             rdest = -1;
-            id = labelLineID(_rdest);
+            id = labelLineID[_rdest];
         }
     }
     virtual ~Goto() {}
@@ -324,7 +333,7 @@ public:
             rsrc = Tools::getRegister(_rsrc);
         } else {
             rsrc = -1;
-            id = labelLineID(_rsrc);
+            id = labelLineID[_rsrc];
         }
     }
     virtual ~Jal() {}
@@ -340,36 +349,36 @@ public:
 //load
 class Load : public Instruction {
 public:
-    int rdset;
+    int rdest;
     string address;
     int id, storage;
-    Load(const string &_rdset, const string &_address)
-        : Instruction(), rdset(Tools::getRegister(rdset)), address(_address), id(-1), storage(0) {}
+    Load(const string &_rdest, const string &_address)
+        : Instruction(), rdest(Tools::getRegister(_rdest)), address(_address), id(-1), storage(0) {}
     virtual ~Load() {}
     virtual void execution() {
-        if (labelLineID.count(address) > 0) {
-            id = labelLineID[address];
+        if (labelMemoryID.count(address) > 0) {
+            id = labelMemoryID[address];
         } else {
             int le, ri;
             for (int i = 0; i < address.length(); i++) {
                 if (address[i] == '(') le = i;
-                if (address[i] == ')') ri = j;
+                if (address[i] == ')') ri = i;
             }
-            int origin = reg[Tools::getRegister(address.substr(i + 1, j - i - 1))];
-            int offset = Tools::string2number(address.substr(0, i));
+            int origin = reg[Tools::getRegister(address.substr(le + 1, ri - le - 1))];
+            int offset = Tools::string2number(address.substr(0, le));
             id = origin + offset;
         }
     }
     virtual void memoryAccess() {}
     virtual void writeBack() {
-        reg[rdset] = storage;
+        reg[rdest] = storage;
     }
 };
 
 class La : public Load {
 public:
     La(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
-    virtual void writeBack() { reg[rdset] = pos; }
+    virtual void writeBack() { reg[rdest] = id; }
 };
 
 class Lb : public Load {
@@ -393,26 +402,26 @@ public:
 //store
 class Store : public Instruction {
 public:
-    int rdset;
+    int rdest;
     string address;
     int id, value;
-    Store(const string &_rdset, const string &_address)
-        : Instruction(), rdset(Tools::getRegister(rdset)), address(_address), id(-1), value(0) {}
+    Store(const string &_rdest, const string &_address)
+        : Instruction(), rdest(Tools::getRegister(_rdest)), address(_address), id(-1), value(0) {}
     virtual ~Store() {}
     virtual void dataPrepare() {
-        value = reg[rdset];
+        value = reg[rdest];
     }
     virtual void execution() {
-        if (labelLineID.count(address) > 0) {
-            id = labelLineID[address];
+        if (labelMemoryID.count(address) > 0) {
+            id = labelMemoryID[address];
         } else {
             int le, ri;
             for (int i = 0; i < address.length(); i++) {
                 if (address[i] == '(') le = i;
-                if (address[i] == ')') ri = j;
+                if (address[i] == ')') ri = i;
             }
-            int origin = reg[Tools::getRegister(address.substr(i + 1, j - i - 1))];
-            int offset = Tools::string2number(address.substr(0, i));
+            int origin = reg[Tools::getRegister(address.substr(le + 1, ri - le - 1))];
+            int offset = Tools::string2number(address.substr(0, le));
             id = origin + offset;
         }
     }
@@ -425,13 +434,13 @@ public:
     virtual void memoryAccess() { pool.storeByte(id, value); }
 };
 
-class Sh : public Load {
+class Sh : public Store {
 public:
     Sh(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
     virtual void memoryAccess() { pool.storeHalfword(id, value); }
 };
 
-class Sw : public Load {
+class Sw : public Store {
 public:
     Sw(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
     virtual void memoryAccess() { pool.storeWord(id, value); }
@@ -440,9 +449,9 @@ public:
 //move
 class Move : public Instruction {
 public:
-    int rdset, rsrc, imm;
-    Move(const string &_rdset, const string &_rsrc) : Instruction() {
-        rdset = Tools::getRegister(_rdset);
+    int rdest, rsrc, imm;
+    Move(const string &_rdest, const string &_rsrc) : Instruction() {
+        rdest = Tools::getRegister(_rdest);
         if (Tools::allnumber(_rsrc)) {
             imm = Tools::string2number(_rsrc);
             rsrc = -1;
@@ -455,7 +464,7 @@ public:
         if (rsrc != -1) imm = reg[rsrc];
     }
     virtual void writeBack() {
-        reg[rdset] = imm;
+        reg[rdest] = imm;
     }
 };
 
@@ -468,7 +477,7 @@ public:
     int ope, pos;
     int Int;
     string Str;
-    Syscall(istream &_fda, ostream &fou) : fda(_fda), fou(_fou) {}
+    Syscall(istream &_fda, ostream &_fou) : fda(_fda), fou(_fou) {}
     virtual void dataPrepare() {
         ope = reg[2];
         switch (ope) {
@@ -484,8 +493,8 @@ public:
     virtual void execution() {
         switch (ope) {
             case 1 : { fou << a0; break; }
-            case 5 : { fin >> Int; break; }
-            case 8 : { fin >> Str; break; }
+            case 5 : { fda >> Int; break; }
+            case 8 : { fda >> Str; break; }
             case 10 : { exit(0); break; }
             case 17 : { exit(a0); break; }
         }

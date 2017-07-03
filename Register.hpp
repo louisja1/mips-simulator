@@ -6,17 +6,17 @@
 
 using namespace std;
 
+extern const int N;
+
 class Register {
 public:
-    int regist[32];
-    int lo, hi;
+    int regist[34];
 
     Register() {
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < 34; i++) {
             regist[i] = 0;
         }
         regist[29] = N - 1;
-        lo = hi = 0;
     }
     ~Register() {}
     int & operator[](const int &key) {
@@ -76,6 +76,8 @@ public:
         if (st == "s8") return 30;
         if (st == "fp") return 30;
         if (st == "ra") return 31;
+        if (st == "lo") return 32;
+        if (st == "hi") return 33;
         return -1;
     }
 };

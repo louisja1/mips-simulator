@@ -204,11 +204,12 @@ public:
     void execute() {
         Cur = labelLineID["main"];
         while (Cur < I.size()) {
-            Instruction *p = I[Cur ++];
+            Instruction *p = I[Cur ++]->copy();
             p->dataPrepare();
             p->execution();
             p->memoryAccess();
             p->writeBack();
+            delete p;
         }
     }
 };

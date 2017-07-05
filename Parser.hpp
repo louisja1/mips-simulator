@@ -23,13 +23,6 @@ extern int Cur;
 
 Register reg;
 
-/*int getLabelID(string st, bool isdata) {
-    if (!label.count(st)) {
-        label[st] = distribute(isdata);
-    }
-    return label[st];
-}*/
-
 bool ac_char(char ch) {
     if (ch >= '0' && ch <= '9') return true;
     if (ch >= 'a' && ch <= 'z') return true;
@@ -56,7 +49,7 @@ public:
         I.clear();
         input();
         classify();
-        execute();
+        work();
     }
     ~Parser() {
         for (int i = 0; i < Lines.size(); i++) {
@@ -106,7 +99,7 @@ public:
                 LINE ++;
                 L->name = key;
                 if (key == ".ascii" || key == ".asciiz") {
-                    int le, ri;
+                    int le(0), ri(0);
                     for (int i = 0; i < str.length(); i++) {
                         if (str[i] == '\"') {
                             le = i; break;
@@ -201,14 +194,74 @@ public:
             I.push_back(p);
         }
     }
-    void execute() {
+    void work() {
         Cur = labelLineID["main"];
-        while (Cur < I.size()) {
-            Instruction *p = I[Cur ++];
-            p->dataPrepare();
-            p->execution();
-            p->memoryAccess();
-            p->writeBack();
+        int regStoreTimes[34];
+        int jump[3] = {0};
+        for (int i = 0; i < 34; i++) regStoreTimes[i] = 0;
+        Instruction *stage[5];
+        for (int i = 0; i < 5; i++) stage[i] = nullptr;
+        while (true) {
+            //write back
+            if (stage[4] != nullptr) {
+                stage[4]->writeBack();
+                for (int i = 0; i < stage[4]->regStore.size(); i++) {
+                    -- regStoreTimes[stage[4]->regStore[i]];
+                }
+                for (int i = 0; i < 3; i++) {
+                    jump[i] -= stage[4]->jump[i];
+                }
+                stage[4] = nullptr;
+            }
+            //memory access
+            if (stage[3] != nullptr) {
+                stage[3]->memoryAccess();
+            }
+            stage[4] = stage[3];
+            stage[3] = nullptr;
+            //execution
+            if (stage[2] != nullptr) {
+                stage[2]->execution();
+            }
+            stage[3] = stage[2];
+            stage[2] = nullptr;
+            //data prepare
+            if (stage[1] != nullptr) {
+                stage[1]->dataPrepare();
+            }
+            stage[2] = stage[1];
+            //Instruction fetch
+            stage[1] = stage[0];
+            stage[0] = nullptr;
+            if (Cur < I.size()) {
+                while (I[Cur] == nullptr && Cur < I.size()) Cur ++;
+                Instruction *p = I[Cur];
+                bool flag = false;
+                for (int i = 0; i < p->regLoad.size(); i++) {
+                    if (regStoreTimes[p->regLoad[i]]) {
+                        flag = true;
+                        break;
+                    }
+                }
+                for (int i = 0; i < 3; i++) {
+                    if (jump[i]) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag) {
+                    p = nullptr;
+                } else {
+                    for (int i = 0; i < p->regStore.size(); i++) {
+                        regStoreTimes[p->regStore[i]] ++;
+                    }
+                    for (int i = 0; i < 3; i++) {
+                        jump[i] += p->jump[i];
+                    }
+                    Cur ++;
+                }
+                stage[0] = p;
+            }
         }
     }
 };

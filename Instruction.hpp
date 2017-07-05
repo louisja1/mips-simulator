@@ -20,9 +20,17 @@ extern int Cur;
 
 class Instruction {
 public:
-    Instruction() {}
+    vector<int> regLoad, regStore;
+    int jump[3];
+
+    Instruction() {
+        regLoad.clear();
+        regStore.clear();
+        for (int i = 0; i < 3; i++) {
+            jump[i] = 0;
+        }
+    }
     virtual ~Instruction() {}
-    virtual Instruction* copy() { return new Instruction(*this); }
     virtual void dataPrepare() {}
     virtual void execution() {}
     virtual void memoryAccess() {}
@@ -41,17 +49,18 @@ public:
             rsrc1 = -1;
         } else {
             rsrc1 = Tools::getRegister(_rsrc1);
+            regLoad.push_back(rsrc1);
         }
         if (Tools::allnumber(_rsrc2)) {
             imm2 = Tools::string2number(_rsrc2);
             rsrc2 = -1;
         } else {
             rsrc2 = Tools::getRegister(_rsrc2);
+            regLoad.push_back(rsrc2);
         }
-        //cout << imm2 << endl;
+        regStore.push_back(rdest);
     }
     virtual ~Caculation() {}
-    virtual Instruction* copy() { return new Caculation(*this); }
     virtual void dataPrepare() {
         if (rsrc1 != -1) imm1 = reg[rsrc1];
         if (rsrc2 != -1) imm2 = reg[rsrc2];
@@ -66,7 +75,6 @@ public:
     bool unsign;
     Add(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual Instruction* copy() { return new Add(*this); }
     virtual void execution() { result = imm1 + imm2; }
 };
 
@@ -75,7 +83,6 @@ public:
     bool unsign;
     Sub(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual Instruction* copy() { return new Sub(*this); }
     virtual void execution() { result = imm1 - imm2; }
 };
 
@@ -87,8 +94,11 @@ public:
     Mul(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {
             isempty = (_rsrc3 == "");
+            if (isempty) {
+                regStore.push_back(32);
+                regStore.push_back(33);
+            }
         }
-    virtual Instruction* copy() { return new Mul(*this); }
     virtual void dataPrepare() {
         if (isempty) {
             imm2 = imm1;
@@ -124,8 +134,11 @@ public:
     Div(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {
             isempty = (_rsrc3 == "");
+            if (isempty) {
+                regStore.push_back(32);
+                regStore.push_back(33);
+            }
         }
-    virtual Instruction* copy() { return new Div(*this); }
     virtual void dataPrepare() {
         if (isempty) {
             imm2 = imm1;
@@ -160,7 +173,6 @@ public:
     bool unsign;
     Xor(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual Instruction* copy() { return new Xor(*this); }
     virtual void execution() { result = imm1 ^ imm2; }
 };
 
@@ -169,7 +181,6 @@ public:
     bool unsign;
     Neg(const string &_rsrc1, const string &_rsrc2, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, ""), unsign(_unsign) {}
-    virtual Instruction* copy() { return new Neg(*this); }
     virtual void execution() { result = -imm1; }
 };
 
@@ -178,7 +189,6 @@ public:
     bool unsign;
     Rem(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3, bool _unsign)
         : Caculation(_rsrc1, _rsrc2, _rsrc3), unsign(_unsign) {}
-    virtual Instruction* copy() { return new Rem(*this); }
     virtual void execution() {
         if (unsign) {
             result = UINT(imm1) % UINT(imm2);
@@ -193,7 +203,6 @@ public:
     bool unsign;
     Seq(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Seq(*this); }
     virtual void execution() { result = (imm1 == imm2); }
 };
 
@@ -202,7 +211,6 @@ public:
     bool unsign;
     Sge(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Sge(*this); }
     virtual void execution() { result = (imm1 >= imm2); }
 };
 
@@ -211,7 +219,6 @@ public:
     bool unsign;
     Sgt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Sgt(*this); }
     virtual void execution() { result = (imm1 > imm2); }
 };
 
@@ -220,7 +227,6 @@ public:
     bool unsign;
     Sle(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Sle(*this); }
     virtual void execution() { result = (imm1 <= imm2); }
 };
 
@@ -229,7 +235,6 @@ public:
     bool unsign;
     Slt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Slt(*this); }
     virtual void execution() { result = (imm1 < imm2); }
 };
 
@@ -238,7 +243,6 @@ public:
     bool unsign;
     Sne(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : Caculation(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Sne(*this); }
     virtual void execution() { result = (imm1 != imm2); }
 };
 
@@ -256,18 +260,20 @@ public:
             rsrc1 = -1;
         } else {
             rsrc1 = Tools::Tools::getRegister(_rsrc1);
+            regLoad.push_back(rsrc1);
         }
         if (Tools::allnumber(_rsrc2)) {
             imm2 = Tools::string2number(_rsrc2);
             rsrc2 = -1;
         } else {
             rsrc2 = Tools::getRegister(_rsrc2);
+            regLoad.push_back(rsrc2);
         }
         flag = false;
         id = labelLineID[_label];
+        jump[0] ++;
     }
     virtual ~BranchJump() {}
-    virtual Instruction* copy() { return new BranchJump(*this); }
     virtual void dataPrepare() {
         if (rsrc1 != -1) imm1 = reg[rsrc1];
         if (rsrc2 != -1) imm2 = reg[rsrc2];
@@ -283,7 +289,6 @@ class Beq : public BranchJump {
 public:
     Beq(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Beq(*this); }
     virtual void execution() { flag = (imm1 == imm2); }
 };
 
@@ -291,7 +296,6 @@ class Bne : public BranchJump {
 public:
     Bne(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Bne(*this); }
     virtual void execution() { flag = (imm1 != imm2); }
 };
 
@@ -299,7 +303,6 @@ class Bge : public BranchJump {
 public:
     Bge(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Bge(*this); }
     virtual void execution() { flag = (imm1 >= imm2); }
 };
 
@@ -307,7 +310,6 @@ class Ble : public BranchJump {
 public:
     Ble(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Ble(*this); }
     virtual void execution() { flag = (imm1 <= imm2); }
 };
 
@@ -315,7 +317,6 @@ class Bgt : public BranchJump {
 public:
     Bgt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Bgt(*this); }
     virtual void execution() { flag = (imm1 > imm2); }
 };
 
@@ -323,7 +324,6 @@ class Blt : public BranchJump {
 public:
     Blt(const string &_rsrc1, const string &_rsrc2, const string &_rsrc3)
         : BranchJump(_rsrc1, _rsrc2, _rsrc3) {}
-    virtual Instruction* copy() { return new Blt(*this); }
     virtual void execution() { flag = (imm1 < imm2); }
 };
 
@@ -334,13 +334,14 @@ public:
     Goto(const string &_rdest) : Instruction() {
         if (labelLineID.count(_rdest) == 0) {
             rdest = Tools::getRegister(_rdest);
+            regLoad.push_back(rdest);
         } else {
             rdest = -1;
             id = labelLineID[_rdest];
         }
+        jump[1] ++;
     }
     virtual ~Goto() {}
-    virtual Instruction* copy() { return new Goto(*this); }
     virtual void dataPrepare() {
         if (rdest != -1) id = reg[rdest];
     }
@@ -353,18 +354,20 @@ public:
 class Jal : public Instruction{
 public:
     int rsrc, id;
-    Jal(const string &_rsrc) {
+    Jal(const string &_rsrc) : Instruction() {
         if (labelLineID.count(_rsrc) == 0) {
             rsrc = Tools::getRegister(_rsrc);
+            regLoad.push_back(rsrc);
         } else {
             rsrc = -1;
             id = labelLineID[_rsrc];
         }
+        jump[2] ++;
+        regStore.push_back(31);
     }
     virtual ~Jal() {}
-    virtual Instruction* copy() { return new Jal(*this); }
     virtual void dataPrepare() {
-        if (rsrc != -1) id = reg[rsrc];
+        if (id == -1) id = reg[rsrc];
     }
     virtual void writeBack() {
         reg[31] = Cur;
@@ -379,7 +382,7 @@ public:
     string address;
     int id, storage, offset;
     Load(const string &_rdest, const string &_address)
-        : Instruction(), rdest(Tools::getRegister(_rdest)), address(_address), id(-1), storage(0), offset(0) {
+        : Instruction(), rdest(Tools::getRegister(_rdest)), rsrc(-1), address(_address), id(-1), storage(0), offset(0) {
             if (labelMemoryID.count(address) > 0) {
                 id = labelMemoryID[address];
             } else {
@@ -390,12 +393,13 @@ public:
                 }
                 rsrc = Tools::getRegister(address.substr(le + 1, ri - le - 1));
                 offset = Tools::string2number(address.substr(0, le));
+                regLoad.push_back(rsrc);
             }
+            regStore.push_back(rdest);
         }
     virtual ~Load() {}
-    virtual Instruction* copy() { return new Load(*this); }
     virtual void dataPrepare() {
-        if (id == -1) {
+        if (rsrc != -1) {
             id = reg[rsrc];
         }
     }
@@ -411,29 +415,25 @@ public:
 class La : public Load {
 public:
     La(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new La(*this); }
     virtual void writeBack() { reg[rdest] = id; }
 };
 
 class Lb : public Load {
 public:
     Lb(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new Lb(*this); }
-    virtual void memoryAccess() { memcpy(&storage, pool + id, 1); }
+    virtual void memoryAccess() { LoadFromPool(&storage, id, 1); }
 };
 
 class Lh : public Load {
 public:
     Lh(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new Lh(*this); }
-    virtual void memoryAccess() { memcpy(&storage, pool + id, 2); }
+    virtual void memoryAccess() { LoadFromPool(&storage, id, 2); }
 };
 
 class Lw : public Load {
 public:
     Lw(const string &_rsrc1, const string &_rsrc2) : Load(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new Lw(*this); }
-    virtual void memoryAccess() { memcpy(&storage, pool + id, 4); }
+    virtual void memoryAccess() { LoadFromPool(&storage, id, 4); }
 };
 
 //store
@@ -443,7 +443,7 @@ public:
     string address;
     int id, value, offset;
     Store(const string &_rdest, const string &_address)
-        : Instruction(), rdest(Tools::getRegister(_rdest)), address(_address), id(-1), value(0), offset(0) {
+        : Instruction(), rdest(Tools::getRegister(_rdest)), rsrc(-1), address(_address), id(-1), value(0), offset(0) {
             if (labelMemoryID.count(address) > 0) {
                 id = labelMemoryID[address];
             } else {
@@ -454,13 +454,14 @@ public:
                 }
                 rsrc = Tools::getRegister(address.substr(le + 1, ri - le - 1));
                 offset = Tools::string2number(address.substr(0, le));
+                regLoad.push_back(rsrc);
             }
+            regLoad.push_back(rdest);
         }
     virtual ~Store() {}
-    virtual Instruction* copy() { return new Store(*this); }
     virtual void dataPrepare() {
         value = reg[rdest];
-        if (id == -1) {
+        if (rsrc != -1) {
             id = reg[rsrc];
         }
     }
@@ -473,22 +474,19 @@ public:
 class Sb : public Store {
 public:
     Sb(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new Sb(*this); }
-    virtual void memoryAccess() { memcpy(pool + id, &value, 1); }
+    virtual void memoryAccess() { StoreToPool(&value, id, 1); }
 };
 
 class Sh : public Store {
 public:
     Sh(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new Sh(*this); }
-    virtual void memoryAccess() { memcpy(pool + id, &value, 2);  }
+    virtual void memoryAccess() { StoreToPool(&value, id, 2); }
 };
 
 class Sw : public Store {
 public:
     Sw(const string &_rsrc1, const string &_rsrc2) : Store(_rsrc1, _rsrc2) {}
-    virtual Instruction* copy() { return new Sw(*this); }
-    virtual void memoryAccess() { memcpy(pool + id, &value, 4);  }
+    virtual void memoryAccess() { StoreToPool(&value, id, 4); }
 };
 
 //move
@@ -502,10 +500,11 @@ public:
             rsrc = -1;
         } else {
             rsrc = Tools::getRegister(_rsrc);
+            regLoad.push_back(rsrc);
         }
+        regStore.push_back(rdest);
     }
     virtual ~Move() {}
-    virtual Instruction* copy() { return new Move(*this); }
     virtual void dataPrepare() {
         if (rsrc != -1) imm = reg[rsrc];
     }
@@ -523,7 +522,12 @@ public:
     int ope, pos;
     int Int;
     string Str;
-    Syscall(istream &_fda, ostream &_fou) : fda(_fda), fou(_fou) {}
+    Syscall(istream &_fda, ostream &_fou) : Instruction(), fda(_fda), fou(_fou) {
+        regLoad.push_back(2);
+        regLoad.push_back(4);
+        regLoad.push_back(5);
+        regStore.push_back(2);
+    }
     virtual ~Syscall() {}
     virtual Instruction* copy() { return new Syscall(*this); }
     virtual void dataPrepare() {
@@ -551,13 +555,13 @@ public:
         switch (ope) {
             case 4 : { for (int i = a0; pool[i]; i ++) fou << pool[i]; break; }
             case 8 : { for (int i = 0; i < Str.length(); i++) pool[a0 + i] = Str[i]; break; }
-            case 9 : { pos = distributeN(a0); break; }
+            //case 9 : { pos = distributeN(a0); break; }
         }
     }
     virtual void writeBack() {
         switch (ope) {
             case 5 : { reg[2] = Int; break; }
-            case 9 : { reg[2] = pos; break; }
+            case 9 : { pos = distributeN(a0); reg[2] = pos; break; }
         }
     }
 };

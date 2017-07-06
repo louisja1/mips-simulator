@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     //ofstream dataAns("output.txt");
 
     prep();
-    Parser ps(mipsIn, cin, cout);
+    Parser ps(mipsIn);
 
     //dataAns.flush();
 

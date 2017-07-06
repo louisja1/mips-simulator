@@ -65,6 +65,8 @@ public:
         if (rsrc1 != -1) imm1 = reg[rsrc1];
         if (rsrc2 != -1) imm2 = reg[rsrc2];
     }
+    virtual void execution() {}
+    virtual void memoryAccess() {}
     virtual void writeBack() {
         reg[rdest] = result;
     }
@@ -278,6 +280,8 @@ public:
         if (rsrc1 != -1) imm1 = reg[rsrc1];
         if (rsrc2 != -1) imm2 = reg[rsrc2];
     }
+    virtual void execution() {}
+    virtual void memoryAccess() {}
     virtual void writeBack() {
         if (flag) {
             Cur = id;
@@ -345,6 +349,8 @@ public:
     virtual void dataPrepare() {
         if (rdest != -1) id = reg[rdest];
     }
+    virtual void execution() {}
+    virtual void memoryAccess() {}
     virtual void writeBack() {
         Cur = id;
     }
@@ -369,6 +375,8 @@ public:
     virtual void dataPrepare() {
         if (id == -1) id = reg[rsrc];
     }
+    virtual void execution() {}
+    virtual void memoryAccess() {}
     virtual void writeBack() {
         reg[31] = Cur;
         Cur = id;
@@ -469,6 +477,7 @@ public:
         id += offset;
     }
     virtual void memoryAccess() {}
+    virtual void writeBack() {}
 };
 
 class Sb : public Store {
@@ -508,6 +517,8 @@ public:
     virtual void dataPrepare() {
         if (rsrc != -1) imm = reg[rsrc];
     }
+    virtual void execution() {}
+    virtual void memoryAccess() {}
     virtual void writeBack() {
         reg[rdest] = imm;
     }

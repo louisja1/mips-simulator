@@ -22,6 +22,7 @@ class Instruction {
 public:
     vector<int> regLoad, regStore;
     int jump[3];
+    int line;
 
     Instruction() {
         regLoad.clear();
@@ -253,7 +254,7 @@ class BranchJump : public Instruction {
 public:
     int rsrc1, rsrc2;
     int imm1, imm2;
-    bool flag;
+    bool flag, predict;
     int id;
 
     BranchJump(const string &_rsrc1, const string &_rsrc2, const string &_label) : Instruction() {
@@ -272,6 +273,7 @@ public:
             regLoad.push_back(rsrc2);
         }
         flag = false;
+        predict = false;
         id = labelLineID[_label];
         jump[0] ++;
     }

@@ -15,6 +15,7 @@ map<string, int> textType;
 map<string, int> labelLineID;
 map<string, int> labelMemoryID;
 int Cur;
+int A = 0, B = 0;
 
 void prep() {
     label.clear();
@@ -104,6 +105,7 @@ int main(int argc, char *argv[]) {
 
     prep();
     Parser ps(mipsIn);
+    cout << 1.00 - 1.00 * B / A << endl;
 
     //dataAns.flush();
 

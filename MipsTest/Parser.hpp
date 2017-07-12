@@ -13,6 +13,9 @@
 
 using namespace std;
 
+const int Mo = 256;
+const int K = 8;
+
 //extern Memory pool;
 extern map<string, int> label;
 extern map<string, int> dataType;
@@ -20,8 +23,14 @@ extern map<string, int> textType;
 extern map<string, int> labelLineID;
 extern map<string, int> labelMemoryID;
 extern int Cur;
+extern int A;
+extern int B;
 
 Register reg;
+
+bool mypredict[Mo][1 << K];
+int counter[Mo][1 << K];
+int S;
 
 bool ac_char(char ch) {
     if (ch >= '0' && ch <= '9') return true;
@@ -48,6 +57,9 @@ public:
         input();
         classify();
         work();
+        memset(mypredict, false, sizeof mypredict);
+        memset(counter, 0, sizeof counter);
+        S = 0;
     }
     ~Parser() {
         for (int i = 0; i < Lines.size(); i++) {
@@ -141,6 +153,7 @@ public:
         for (int i = 0; i < 5; i++) stage[i] = nullptr;
         while (true) {
             //write back
+            stage[4] = stage[3];
             if (stage[4] != nullptr) {
                 stage[4]->writeBack();
                 for (int i = 0; i < stage[4]->regStore.size(); i++) {
@@ -152,28 +165,60 @@ public:
                 stage[4] = nullptr;
             }
             //memory access
+            stage[3] = stage[2];
             if (stage[3] != nullptr) {
                 stage[3]->memoryAccess();
             }
-            stage[4] = stage[3];
-            stage[3] = nullptr;
             //execution
+            stage[2] = stage[1];
             if (stage[2] != nullptr) {
                 stage[2]->execution();
+                if (stage[2]->jump[0] == 1) {
+                    int id = stage[2]->line % 256;
+                    ++ A;
+                    bool flag = ((BranchJump*)stage[2])->flag;
+                    bool predict = ((BranchJump*)stage[2])->predict;
+                    if (flag != predict) {
+                        ++ B;
+                        if (stage[0] != nullptr) {
+                            Instruction *p = stage[0];
+                            for (int i = 0; i < p->regStore.size(); i++) {
+                                regStoreTimes[p->regStore[i]] --;
+                            }
+                        }
+                        stage[1] = stage[0] = nullptr;
+                        if (flag) {
+                            Cur = ((BranchJump*)stage[2])->id;
+                        } else {
+                            Cur = stage[2]->line + 1;
+                        }
+                        ++ counter[id][S];
+                        if (counter[id][S] == 2) {
+                            mypredict[id][S] = !mypredict[id][S];
+                            counter[id][S] = 0;
+                        }
+                    } else {
+                        counter[id][S] = 0;
+                    }
+                    S = (S >> 1) | (flag << (K - 1));
+                }
             }
-            stage[3] = stage[2];
-            stage[2] = nullptr;
             //data prepare
+            stage[1] = stage[0];
             if (stage[1] != nullptr) {
                 stage[1]->dataPrepare();
+                if (stage[1]->jump[0] == 1) {
+                    int id = stage[1]->line % 256;
+                    ((BranchJump*)stage[1])->predict = mypredict[id][S];
+                    if (!mypredict[id][S]) Cur = stage[1]->line + 1;
+                }
             }
-            stage[2] = stage[1];
             //Instruction fetch
-            stage[1] = stage[0];
             stage[0] = nullptr;
             if (Cur < I.size()) {
                 while (I[Cur] == nullptr && Cur < I.size()) Cur ++;
                 Instruction *p = I[Cur];
+                p->line = Cur;
                 bool flag = false;
                 for (int i = 0; i < p->regLoad.size(); i++) {
                     if (regStoreTimes[p->regLoad[i]]) {
